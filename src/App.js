@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { API_BASE_URL } from "./config";
 import axios from "axios";
 import "./App.css";
+import Rating from "react-rating";
 
 class App extends Component {
   constructor() {
@@ -18,7 +19,9 @@ class App extends Component {
         rating: [],
         ip: []
       },
-      buttonDisabled: false
+      buttonDisabled: false,
+      rating: 0,
+      rated: []
     };
     this.handleClick = this.handleClick.bind(this);
   }
@@ -27,13 +30,21 @@ class App extends Component {
     axios.get(`${API_BASE_URL}/quotes`).then(res => {
       let newArr = res.data.filter(item => item.quote === input);
       if (newArr.length > 0) {
+        console.log(newArr[0]);
         this.setState({
-          quoteStats: { rating: newArr[0].rating, ip: newArr[0].ip }
+          quoteStats: {
+            rating: newArr[0].rating,
+            ip: newArr[0].ip,
+            id: newArr[0].id
+          }
         });
       }
       if (newArr.length === 0) {
-        this.setState({ quoteStats: { rating: [], ip: [] } });
-        axios.post(`${API_BASE_URL}/quotes`, { quote: input });
+        axios.post(`${API_BASE_URL}/quotes`, { quote: input }).then(res => {
+          this.setState({
+            quoteStats: { rating: [], ip: [], id: res.data.id }
+          });
+        });
       }
     });
   }
@@ -50,30 +61,26 @@ class App extends Component {
       let num = Math.floor(Math.random() * this.state.shortQuotes.length);
       this.setState({
         chosenQuote: this.state.shortQuotes[num]
-      }).then(() => {
-        this.getQuoteStats(num);
       });
+      this.getQuoteStats(this.state.shortQuotes[num]);
     }
     if (this.state.length === "Medium Quote") {
       let num = Math.floor(Math.random() * this.state.mediumQuotes.length);
       this.setState({
         chosenQuote: this.state.mediumQuotes[num]
-      }).then(() => {
-        this.getQuoteStats(num);
       });
+      this.getQuoteStats(this.state.mediumQuotes[num]);
     }
     if (this.state.length === "Long Quote") {
       let num = Math.floor(Math.random() * this.state.longQuotes.length);
       this.setState({
         chosenQuote: this.state.longQuotes[num]
-      }).then(() => {
-        this.getQuoteStats(num);
       });
+      this.getQuoteStats(this.state.longQuotes[num]);
     }
   }
 
   handleClick() {
-
     this.setState({ buttonDisabled: true });
     setTimeout(() => this.setState({ buttonDisabled: false }), 2000);
 
@@ -109,30 +116,93 @@ class App extends Component {
     }
   }
 
+  updateRating(inp1, inp2) {
+    console.log(inp1, inp2, this.state.quoteStats);
+    const newObj = {
+      rating: [...this.state.quoteStats.rating, inp1],
+      ip: [...this.state.quoteStats.ip, inp2]
+    };
+
+    this.setState({ rated: [...this.state.rated, this.state.quoteStats.id] });
+
+    axios
+      .put(`${API_BASE_URL}/quotes/${this.state.quoteStats.id}`, newObj)
+      .catch(e => {
+        console.log(e);
+      })
+      .then(() => {
+        this.setState({
+          quoteStats: {
+            rating: [...this.state.quoteStats.rating, inp1],
+            ip: [...this.state.quoteStats.ip, inp2],
+            id: this.state.quoteStats.id
+          }
+        });
+      });
+  }
+
   handleLength(event) {
     this.setState({ length: event.target.value });
   }
 
-  getRating() {
-    let total = 0;
-    for (let i = 0; i < this.state.quoteStats.rating.length; i++) {
-      total += this.state.quoteStats.rating[i];
+
+  showRating() {
+    let newArr = this.state.rated.filter(
+      item => item === this.state.quoteStats.id
+    );
+
+    if (newArr.length === 0) {
+      return (
+        <Rating
+          fractions={2}
+          initialRating={this.state.rating}
+          onClick={event => {
+            this.setState({ rating: event });
+            this.updateRating(event, 100);
+          }}
+        />
+      );
     }
 
-    total = total / this.state.quoteStats.rating.length;
+    else {
+      return (
+        <p>You have already rated this quote.</p>
+      )
+    }
+  }
+
+  getRating() {
+    let total = 0;
+    if (this.state.quoteStats.rating) {
+      for (let i = 0; i < this.state.quoteStats.rating.length; i++) {
+        total += this.state.quoteStats.rating[i];
+      }
+
+      total = total / this.state.quoteStats.rating.length;
+    }
 
     if (total > 0) {
       return (
-        <p>
-          This quote has a rating of {total} out of{" "}
-          {this.state.quoteStats.rating.length} votes.
-        </p>
+        <>
+          <p>
+            This quote has a rating of {total} out of{" "}
+            {this.state.quoteStats.rating.length} votes.
+          </p>
+          {this.showRating()}
+        </>
       );
     }
     if (this.state.chosenQuote !== "") {
-      return <p>This quote doesn't have a rating yet.</p>;
+      return (
+        <>
+          <p>This quote doesn't have a rating yet.</p>
+          {this.showRating()}
+        </>
+      );
     }
   }
+
+
 
   render() {
     return (
@@ -150,6 +220,7 @@ class App extends Component {
               className="getQuoteButton"
               disabled={this.state.buttonDisabled}
               onClick={() => {
+                this.setState({ rating: 0 });
                 this.handleClick();
               }}
             >
