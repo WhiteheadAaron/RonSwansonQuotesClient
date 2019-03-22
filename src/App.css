@@ -10,18 +10,32 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  height: 100vh;
+  padding-left: 20%;
+  padding-right: 20%;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+
+select, button {
+  margin: 10px;
+}
+
+.title {
+  padding-top: 20vh;
+  display: inline-block;
+  align-items: center;
+  justify-content: center;
+}
+
+.getQuoteButton:hover {
+  cursor: pointer;
 }
 
 .App-link {
   color: #61dafb;
 }
+
 
 @keyframes App-logo-spin {
   from {
