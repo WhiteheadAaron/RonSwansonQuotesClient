@@ -3,7 +3,6 @@ import { API_BASE_URL } from "./config";
 import axios from "axios";
 import "./App.css";
 import Rating from "react-rating";
-import fetch from 'node-fetch';
 
 
 class App extends Component {
