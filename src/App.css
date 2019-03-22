@@ -36,6 +36,12 @@ select, button {
   color: #61dafb;
 }
 
+@media only screen and (max-width: 500px) {
+  .title {
+    padding-top: 5vh;
+  }
+}
+
 
 @keyframes App-logo-spin {
   from {

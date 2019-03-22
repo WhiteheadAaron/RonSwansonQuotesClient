@@ -3,6 +3,8 @@ import { API_BASE_URL } from "./config";
 import axios from "axios";
 import "./App.css";
 import Rating from "react-rating";
+import fetch from 'node-fetch';
+
 
 class App extends Component {
   constructor() {
@@ -21,16 +23,60 @@ class App extends Component {
       },
       buttonDisabled: false,
       rating: 0,
-      rated: []
+      rated: [],
+      ip: ""
     };
     this.handleClick = this.handleClick.bind(this);
+  }
+
+  getIP() {
+    axios
+      .get('http://api.ipstack.com/134.201.250.155?access_key=3c8383d3061f516a5b6aa9a0f2091f0c')
+      .then(json => {
+        this.setState({ ip: json.data.ip })
+      })
+  }
+
+  handleClick() {
+    this.setState({ buttonDisabled: true });
+    setTimeout(() => this.setState({ buttonDisabled: false }), 2000);
+
+    if (this.state.quotes.length === 0) {
+      axios
+        .get("https://ron-swanson-quotes.herokuapp.com/v2/quotes/58")
+        .then(res => {
+          for (let i = 0; i < res.data.length; i++) {
+            let length = res.data[i].split(" ").length;
+            if (length < 5) {
+              this.setState({
+                shortQuotes: [...this.state.shortQuotes, res.data[i]]
+              });
+            } else if (length < 13) {
+              this.setState({
+                mediumQuotes: [...this.state.mediumQuotes, res.data[i]]
+              });
+            } else {
+              this.setState({
+                longQuotes: [...this.state.longQuotes, res.data[i]]
+              });
+            }
+          }
+          this.setState({ quotes: res.data });
+          this.setState({ button: "Get a New Quote" });
+          return res;
+        })
+        .then(() => {
+          this.getQuote();
+        });
+    } else {
+      this.getQuote();
+    }
   }
 
   getQuoteStats(input) {
     axios.get(`${API_BASE_URL}/quotes`).then(res => {
       let newArr = res.data.filter(item => item.quote === input);
       if (newArr.length > 0) {
-        console.log(newArr[0]);
         this.setState({
           quoteStats: {
             rating: newArr[0].rating,
@@ -80,44 +126,7 @@ class App extends Component {
     }
   }
 
-  handleClick() {
-    this.setState({ buttonDisabled: true });
-    setTimeout(() => this.setState({ buttonDisabled: false }), 2000);
-
-    if (this.state.quotes.length === 0) {
-      axios
-        .get("https://ron-swanson-quotes.herokuapp.com/v2/quotes/58")
-        .then(res => {
-          for (let i = 0; i < res.data.length; i++) {
-            let length = res.data[i].split(" ").length;
-            if (length < 5) {
-              this.setState({
-                shortQuotes: [...this.state.shortQuotes, res.data[i]]
-              });
-            } else if (length < 13) {
-              this.setState({
-                mediumQuotes: [...this.state.mediumQuotes, res.data[i]]
-              });
-            } else {
-              this.setState({
-                longQuotes: [...this.state.longQuotes, res.data[i]]
-              });
-            }
-          }
-          this.setState({ quotes: res.data });
-          this.setState({ button: "Get a New Quote" });
-          return res;
-        })
-        .then(() => {
-          this.getQuote();
-        });
-    } else {
-      this.getQuote();
-    }
-  }
-
   updateRating(inp1, inp2) {
-    console.log(inp1, inp2, this.state.quoteStats);
     const newObj = {
       rating: [...this.state.quoteStats.rating, inp1],
       ip: [...this.state.quoteStats.ip, inp2]
@@ -145,29 +154,26 @@ class App extends Component {
     this.setState({ length: event.target.value });
   }
 
-
   showRating() {
     let newArr = this.state.rated.filter(
       item => item === this.state.quoteStats.id
     );
 
-    if (newArr.length === 0) {
+    let newArr2 = this.state.quoteStats.ip.filter(item => item === this.state.ip);
+
+    if (newArr.length === 0 && newArr2.length === 0) {
       return (
         <Rating
           fractions={2}
           initialRating={this.state.rating}
           onClick={event => {
             this.setState({ rating: event });
-            this.updateRating(event, 100);
+            this.updateRating(event, this.state.ip);
           }}
         />
       );
-    }
-
-    else {
-      return (
-        <p>You have already rated this quote.</p>
-      )
+    } else {
+      return <p>You have already rated this quote.</p>;
     }
   }
 
@@ -202,8 +208,6 @@ class App extends Component {
     }
   }
 
-
-
   render() {
     return (
       <div className="App">
@@ -220,6 +224,7 @@ class App extends Component {
               className="getQuoteButton"
               disabled={this.state.buttonDisabled}
               onClick={() => {
+                this.getIP();
                 this.setState({ rating: 0 });
                 this.handleClick();
               }}
