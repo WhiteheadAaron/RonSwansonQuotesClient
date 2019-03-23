@@ -74,7 +74,7 @@ class App extends Component {
   }
 
   getQuoteStats(input) {
-    axios.get(`https://elastic-kilby-3da5c2.netlify.com/quotes`).then(res => {
+    axios.get(`https://ron-swanson-server.herokuapp.com/quotes`).then(res => {
       let newArr = res.data.filter(item => item.quote === input);
       if (newArr.length > 0) {
         this.setState({
@@ -86,7 +86,7 @@ class App extends Component {
         });
       }
       if (newArr.length === 0) {
-        axios.post(`https://elastic-kilby-3da5c2.netlify.com/quotes`, { quote: input }).then(res => {
+        axios.post(`https://ron-swanson-server.herokuapp.com/quotes`, { quote: input }).then(res => {
           this.setState({
             quoteStats: { rating: [], ip: [], id: res.data.id }
           });
@@ -135,7 +135,7 @@ class App extends Component {
     this.setState({ rated: [...this.state.rated, this.state.quoteStats.id] });
 
     axios
-      .put(`https://elastic-kilby-3da5c2.netlify.com/quotes/${this.state.quoteStats.id}`, newObj)
+      .put(`https://ron-swanson-server.herokuapp.com/quotes/${this.state.quoteStats.id}`, newObj)
       .catch(e => {
         console.log(e);
       })
