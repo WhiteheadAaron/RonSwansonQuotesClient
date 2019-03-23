@@ -30,7 +30,8 @@ class App extends Component {
 
   getIP() {
     axios
-      .get('http://api.ipstack.com/134.201.250.155?access_key=3c8383d3061f516a5b6aa9a0f2091f0c')
+      // .get('http://api.ipstack.com/134.201.250.155?access_key=3c8383d3061f516a5b6aa9a0f2091f0c')
+      .get('https://ip.seeip.org/json')
       .then(json => {
         this.setState({ ip: json.data.ip })
       })
