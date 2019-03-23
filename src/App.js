@@ -76,10 +76,10 @@ class App extends Component {
 
   getQuoteStats(input) {
 
-    console.log(input);
+    
 
     axios.get(`${API_BASE_URL}/quotes`).then(res => {
-      console.log(res);
+      
       let newArr = res.data;
 
       newArr = newArr.filter(item => item.quote === input);
@@ -141,7 +141,7 @@ class App extends Component {
       ip: [...this.state.quoteStats.ip, inp2]
     };
 
-    console.log(this.state.quoteStats.id);
+  
 
     this.setState({ rated: [...this.state.rated, this.state.quoteStats.id] });
 
