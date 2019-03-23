@@ -4,7 +4,6 @@ import axios from "axios";
 import "./App.css";
 import Rating from "react-rating";
 
-
 class App extends Component {
   constructor() {
     super();
@@ -29,12 +28,14 @@ class App extends Component {
   }
 
   getIP() {
-    axios
-      // .get('http://api.ipstack.com/134.201.250.155?access_key=3c8383d3061f516a5b6aa9a0f2091f0c')
-      .get('https://ip.seeip.org/json')
-      .then(json => {
-        this.setState({ ip: json.data.ip })
-      })
+    if (this.state.ip === "") {
+      axios
+        // .get('http://api.ipstack.com/134.201.250.155?access_key=3c8383d3061f516a5b6aa9a0f2091f0c')
+        .get("https://ip.seeip.org/json")
+        .then(json => {
+          this.setState({ ip: json.data.ip });
+        });
+    }
   }
 
   handleClick() {
@@ -74,8 +75,15 @@ class App extends Component {
   }
 
   getQuoteStats(input) {
-    axios.get(`https://ron-swanson-server.herokuapp.com/quotes`).then(res => {
-      let newArr = res.data.filter(item => item.quote === input);
+
+    console.log(input);
+
+    axios.get(`${API_BASE_URL}/quotes`).then(res => {
+      console.log(res);
+      let newArr = res.data;
+
+      newArr = newArr.filter(item => item.quote === input);
+
       if (newArr.length > 0) {
         this.setState({
           quoteStats: {
@@ -85,8 +93,9 @@ class App extends Component {
           }
         });
       }
+
       if (newArr.length === 0) {
-        axios.post(`https://ron-swanson-server.herokuapp.com/quotes`, { quote: input }).then(res => {
+        axios.post(`${API_BASE_URL}/quotes`, { quote: input }).then(res => {
           this.setState({
             quoteStats: { rating: [], ip: [], id: res.data.id }
           });
@@ -132,10 +141,12 @@ class App extends Component {
       ip: [...this.state.quoteStats.ip, inp2]
     };
 
+    console.log(this.state.quoteStats.id);
+
     this.setState({ rated: [...this.state.rated, this.state.quoteStats.id] });
 
     axios
-      .put(`https://ron-swanson-server.herokuapp.com/quotes/${this.state.quoteStats.id}`, newObj)
+      .put(`${API_BASE_URL}/quotes/${this.state.quoteStats.id}`, newObj)
       .catch(e => {
         console.log(e);
       })
@@ -159,7 +170,9 @@ class App extends Component {
       item => item === this.state.quoteStats.id
     );
 
-    let newArr2 = this.state.quoteStats.ip.filter(item => item === this.state.ip);
+    let newArr2 = this.state.quoteStats.ip.filter(
+      item => item === this.state.ip
+    );
 
     if (newArr.length === 0 && newArr2.length === 0) {
       return (
